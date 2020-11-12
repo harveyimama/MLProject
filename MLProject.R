@@ -87,3 +87,46 @@ lm.pred = data.frame(predicted = lm.pred, actual =houses.test$SalePrice )
 
 plot(lm.pred) 
 abline(0, 1)
+
+###############################
+# Regularized regression
+# Ridge and Lasso Regression using cross validation
+###############################
+
+library(ISLR)
+x = model.matrix(SalePrice ~ .,  houses)[, -1]
+y = houses$SalePrice
+
+
+train = sample(1:nrow(x), 7*nrow(x)/10)
+test = (-train)
+y.test = y[test]
+
+library(glmnet)
+
+ridge.house.train = glmnet(x[train, ], y[train], alpha = 0, lambda = grid)
+grid = 10^seq(5, -2, length = 100)
+cv.ridge.house = cv.glmnet(x[train,], y[train],
+                           lambda = grid, alpha = 0, nfolds = 10)
+
+ridge.predict = predict(ridge.house.train, s = cv.ridge.house$lambda.min, newx = x[test, ])
+mean((ridge.predict - y.test)^2)
+
+ridge.pred = data.frame(predicted = ridge.predict, actual =y.test )
+
+plot(ridge.pred)
+abline(0, 1)
+
+
+lasso.house.train = glmnet(x[train, ], y[train], alpha = 1, lambda = grid)
+
+cv.lasso.house = cv.glmnet(x[train,], y[train],
+                           lambda = grid, alpha = 0, nfolds = 10)
+
+lasso.predict = predict(lasso.house.train, s = cv.lasso.house$lambda.min, newx = x[test, ])
+mean((lasso.predict - y.test)^2)
+
+lasso.pred = data.frame(predicted = lasso.predict, actual =y.test )
+
+plot(lasso.pred)
+abline(0, 1)
